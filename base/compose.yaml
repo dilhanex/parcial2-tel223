@@ -1,0 +1,38 @@
+# Segundo Parcial · Componente práctico · Entorno base
+# El nombre del proyecto lleva el apellido: los contenedores se llaman parcial-<apellido>-web-1, etc.
+name: parcial-${APELLIDO:?Falta APELLIDO en .env}
+
+services:
+  web:
+    image: nginx:stable
+    ports:
+      - "80:80"
+    environment:
+      APELLIDO: ${APELLIDO}
+    volumes:
+      - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./web:/usr/share/nginx/html:ro
+    depends_on:
+      - api
+
+  api:
+    build: ./api
+    environment:
+      DATABASE_URL: postgresql://app:${DB_CLAVE:?Falta DB_CLAVE en .env}@db:5432/laboratorio
+      AUTOR: ${APELLIDO}
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: ${DB_CLAVE}
+      POSTGRES_DB: laboratorio
+    volumes:
+      - datos:/var/lib/postgresql/data
+      - ./db/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./db/02_datos.sql:/docker-entrypoint-initdb.d/02_datos.sql:ro
+
+volumes:
+  datos:
