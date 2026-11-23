@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Préstamos del laboratorio</title>
+<style>
+  body  { font-family: Arial, sans-serif; max-width: 720px; margin: 24px auto; padding: 0 16px; color: #1e2630; }
+  h1    { color: #1F3050; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #d9dee5; padding: 6px 10px; text-align: left; }
+  th    { background: #E8ECF3; }
+  .estado { margin: 10px 0; padding: 8px; border-radius: 6px; background: #eef2f7; }
+  .error  { background: #fbe9e7; color: #b03a2e; }
+</style>
+</head>
+<body>
+<h1>Préstamos del laboratorio</h1>
+<p>Página servida por el contenedor <b>web</b>; los datos vienen de <code>/api/prestamos</code> (contenedores <b>api</b> y <b>db</b>).</p>
+<button id="btn">Actualizar</button>
+<div id="estado" class="estado">Cargando…</div>
+<table>
+  <thead><tr><th>id</th><th>estudiante</th><th>equipo</th><th>estado</th><th>fecha</th></tr></thead>
+  <tbody id="filas"></tbody>
+</table>
+<script>
+async function cargar() {
+  const estado = document.getElementById("estado");
+  const filas = document.getElementById("filas");
+  estado.className = "estado"; estado.textContent = "Cargando…"; filas.innerHTML = "";
+  try {
+    const resp = await fetch("/api/prestamos");          // mismo origen: sin CORS
+    if (!resp.ok) { estado.className = "estado error"; estado.textContent = "La interfaz respondió " + resp.status; return; }
+    const lista = await resp.json();
+    if (lista.length === 0) { estado.textContent = "No hay préstamos registrados."; return; }
+    for (const p of lista) {
+      const tr = document.createElement("tr");
+      for (const v of [p.id, p.id_est, p.id_equipo, p.estado, p.fecha_salida]) {
+        const td = document.createElement("td"); td.textContent = v; tr.appendChild(td);
+      }
+      filas.appendChild(tr);
+    }
+    estado.textContent = lista.length + " préstamos (HTTP " + resp.status + ")";
+  } catch (e) {
+    estado.className = "estado error"; estado.textContent = "No se pudo conectar con el servidor.";
+  }
+}
+document.getElementById("btn").addEventListener("click", cargar);
+cargar();
+</script>
+</body>
+</html>
