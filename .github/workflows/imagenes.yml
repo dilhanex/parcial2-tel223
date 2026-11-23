@@ -1,0 +1,28 @@
+# Empaqueta las imágenes Docker del parcial y las publica en la Release "imagenes".
+# Se ejecuta sola al subir cambios, o a mano en Actions → Empaquetar imágenes → Run workflow.
+name: Empaquetar imágenes
+on:
+  workflow_dispatch:
+  push:
+    paths: [".github/workflows/imagenes.yml"]
+permissions:
+  contents: write
+jobs:
+  imagenes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar y empaquetar
+        run: |
+          docker pull nginx:stable
+          docker pull postgres:16
+          docker pull python:3.12-slim
+          docker save nginx:stable postgres:16 python:3.12-slim | gzip > imagenes.tar.gz
+          ls -lh imagenes.tar.gz
+      - name: Publicar en Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete imagenes --yes --cleanup-tag -R "${{ github.repository }}" || true
+          gh release create imagenes imagenes.tar.gz -R "${{ github.repository }}" \
+            --title "Imágenes Docker del Segundo Parcial" \
+            --notes "Se cargan con: docker load -i imagenes.tar.gz"
