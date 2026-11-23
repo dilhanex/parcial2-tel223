@@ -1,0 +1,16 @@
+# Nginx reemplaza ${APELLIDO} al arrancar (plantilla de la imagen oficial).
+server {
+    listen 80;
+    server_name _;
+    add_header X-Estudiante "${APELLIDO}" always;
+
+    location / {
+        root /usr/share/nginx/html;
+        index index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://api:8000/;
+        proxy_set_header Host $host;
+    }
+}
